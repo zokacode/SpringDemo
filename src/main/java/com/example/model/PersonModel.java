@@ -1,29 +1,50 @@
 package com.example.model;
 
+import jakarta.persistence.*;
+import lombok.Data;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import org.springframework.stereotype.Component;
 
-@Component
+@Data
+@Entity
+@Table(name = "tb_person")
+@EntityListeners(AuditingEntityListener.class)
 public class PersonModel {
 
-	//ID 流水號
-	private String id;
-	//名字
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
+
+	@Column(name = "name",
+			columnDefinition = "名字")
 	private String name;
-	//暱稱
+
+	@Column(name = "nickname",
+			columnDefinition = "暱稱")
 	private String nickname;
-	//性別
+
+	@Column(name = "sex",
+			columnDefinition = "性別")
 	private String sex;
-	//生日
+
+	@Column(name = "birthday",
+			columnDefinition = "生日")
 	private String birthday;
-	//備註
+
+	@Column(name = "description",
+			columnDefinition = "備註")
 	private String description;
-	//建立時間
+
+	@Column(name = "create_time",
+			columnDefinition = "建立時間")
+	@CreatedDate
 	private String create_time;
 
-	public String getId() {
+	public Long getId() {
 		return id;
 	}
-	public void setId(String id) {
+	public void setId(Long id) {
 		this.id = id;
 	}
 	public String getName() {
