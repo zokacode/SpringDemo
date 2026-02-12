@@ -8,6 +8,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.example.repository.PersonRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -15,13 +18,13 @@ import org.springframework.stereotype.Service;
 import com.example.model.PersonModel;
 
 @Service
+@RequiredArgsConstructor
+@Slf4j
 public class PersonService {
 
-	@Autowired
 	private PersonModel personModel;
-
-	@Autowired
-	private JdbcTemplate jdbcTemplate;
+	private final JdbcTemplate jdbcTemplate;
+	private final PersonRepository personRepository;
 
 	private PrintStream ps = new PrintStream(System.out);
 
@@ -211,19 +214,16 @@ public class PersonService {
 	}
 
 	/* 刪除資料 */
-	public void delPerson(String id) throws Exception{
-		String iid = personModel.getId();
-
-		ps.println("delPerson開始 " + sdf.format(new Date()));
-		String sql = "DELETE FROM tb_person WHERE id = " + id;
+	public void delPerson(String id) throws Exception {
 		try {
-			jdbcTemplate.update(sql);
-			ps.println(sql);
-			ps.println("delPerson結束 " + sdf.format(new Date()));
+			log.info("delPerson start: {}", sdf.format(new Date()));
+			Long modelId = Long.parseLong(id);
+			personRepository.deleteById(modelId);
 		} catch (Exception e) {
-			// TODO: handle exception
-			System.out.println(e.getMessage());
-			e.printStackTrace();
+			log.error("刪除人員資料失敗, id: {}", id, e);
+			throw e;
+		} finally {
+			log.info("delPerson end: {}", sdf.format(new Date()));
 		}
 	}
 
