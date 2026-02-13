@@ -9,10 +9,10 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.example</groupId>
-	<artifactId>SpringDemo_01</artifactId>
+	<artifactId>SpringDemo</artifactId>
 	<version>0.0.17</version>
-	<packaging>war</packaging>
-	<name>SpringDemo_01</name>
+	<packaging>jar</packaging>
+	<name>SpringDemo</name>
 	<description>Demo project for Spring Boot</description>
 
 	<properties>
@@ -28,20 +28,9 @@
 
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-tomcat</artifactId>
-			<scope>provided</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
-
-		<dependency>
-      		<groupId>org.springframework.boot</groupId>
-      		<artifactId>spring-boot-starter-thymeleaf</artifactId>
-    	</dependency>
 
 		<dependency>
 			<groupId>com.mysql</groupId>
