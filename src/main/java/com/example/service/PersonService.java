@@ -38,7 +38,7 @@ public class PersonService {
 						.sex(person.getSex())
 						.birthday(person.getBirthday())
 						.description(person.getDescription())
-						.createTime(person.getCreate_time())
+						.createTime(person.getCreated_at())
 						.build())
 					.toList();
 			return BaseResp.success(responseList);
@@ -63,7 +63,7 @@ public class PersonService {
 						.sex(person.getSex())
 						.birthday(person.getBirthday())
 						.description(person.getDescription())
-						.createTime(person.getCreate_time())
+						.createTime(person.getCreated_at())
 						.build();
 					return BaseResp.success(resp);
 				})

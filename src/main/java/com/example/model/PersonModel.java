@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import org.springframework.stereotype.Component;
 
@@ -46,9 +47,14 @@ public class PersonModel {
 	private String description;
 
 	@CreatedDate
-	@Column(name = "create_time",
+	@Column(name = "created_at",
 			columnDefinition = "建立時間", updatable = false)
 	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-	private Instant create_time;
+	private Instant created_at;
 
+	@LastModifiedDate
+	@Column(name = "updated_at",
+			columnDefinition = "更新時間")
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+	private Instant updated_at;
 }

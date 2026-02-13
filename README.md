@@ -1,4 +1,10 @@
-# Spring_Demo01
+# Spring_Demo
+
+* **2026-02-13**  
+練習並重構, 調整為java17、JPA
+
+---
+
 * **2023-01-30**  
 Spring Boot & Git  
 ---  

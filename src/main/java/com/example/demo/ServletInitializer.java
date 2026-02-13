@@ -2,6 +2,7 @@ package com.example.demo;
 
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
+import com.example.SpringDemo01Application;
 
 public class ServletInitializer extends SpringBootServletInitializer {
 
