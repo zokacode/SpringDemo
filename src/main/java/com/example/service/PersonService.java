@@ -1,14 +1,12 @@
 package com.example.service;
 
-import java.io.PrintStream;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-import com.example.repository.PersonRepository;
+import com.example.enums.SystemCode;
+import com.example.request.PersonCreateRequest;
+import com.example.request.PersonUpdateRequest;
+import com.example.response.BaseResp;
+import com.example.response.PersonResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,214 +14,167 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import com.example.model.PersonModel;
+import com.example.repository.PersonRepository;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class PersonService {
 
-	private PersonModel personModel;
 	private final JdbcTemplate jdbcTemplate;
 	private final PersonRepository personRepository;
 
-	private PrintStream ps = new PrintStream(System.out);
-
-	//時間轉換用
-	private SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-
 	/* 取得Person全部資料 */
-	public Map<String, Object> getAllPerson() {
-		// TODO Auto-generated method stub
-		System.out.println("getAllPerson開始 " + sdf.format(new Date()));
-		System.out.println("取得Person全部會員資料..");
-		Map<String, Object> rs=new HashMap<String, Object>();
-		StringBuilder sql = new StringBuilder("select id, name, nickname, sex,"
-											+ " birthday, description,"
-											+ " date_format(create_time, '%Y-%m-%d %H:%m:%s') as create_time"
-											+ " from tb_person");
-		rs.put("data",jdbcTemplate.queryForList(sql.toString()));
-
-		List<Map<String, Object>> ms;
-		ms = jdbcTemplate.queryForList(sql.toString());
-		
-		System.out.println(rs.get("data"));
-		System.out.println("getAllPerson結束 " + sdf.format(new Date()));
-
-		return rs;
+	public BaseResp<List<PersonResponse>> getAllPerson() {
+		log.info("getAllPerson 開始執行");
+		try {
+			List<PersonModel> personList = personRepository.findAll();
+			List<PersonResponse> responseList = personList.stream()
+					.map(person -> PersonResponse.builder()
+						.id(person.getId())
+						.name(person.getName())
+						.nickname(person.getNickname())
+						.sex(person.getSex())
+						.birthday(person.getBirthday())
+						.description(person.getDescription())
+						.createTime(person.getCreate_time())
+						.build())
+					.toList();
+			return BaseResp.success(responseList);
+		} catch (Exception e) {
+			log.error("getAllPerson 執行失敗", e);
+			return BaseResp.error(SystemCode.SYSTEM_ERROR);
+		} finally {
+			log.info("getAllPerson 執行結束");
+		}
 	}
 
 	/* 取得單獨資料 */
-	public Map<String, Object> getOnePerson(String id) {
-		// TODO Auto-generated method stub
-		System.out.println("getPerson開始 " + sdf.format(new Date()));
-		System.out.println("取得Person : "+id+" 會員資料..");
-		Map<String, Object> rs=new HashMap<String, Object>();
-		StringBuilder sql = new StringBuilder("SELECT id, name, nickname, sex,"
-											+ " birthday, description,"
-											+ " date_format(create_time, '%Y-%M-%d %H:%m:%s') as create_time"
-											+ " FROM tb_person"
-											+ " WHERE id = "+id);
-		rs.put("data",jdbcTemplate.queryForList(sql.toString()));
-		
-		List<Map<String, Object>> ms;
-		ms = jdbcTemplate.queryForList(sql.toString());
-		
-		System.out.println(rs);
-		System.out.println("getPerson結束 " + sdf.format(new Date()));
-		
-		return rs;
+	public BaseResp<PersonResponse> getOnePerson(Long id) {
+		log.info("getOnePerson 開始執行, id: {}", id);
+		try {
+			return personRepository.findById(id)
+				.map(person -> {
+					PersonResponse resp = PersonResponse.builder()
+						.id(person.getId())
+						.name(person.getName())
+						.nickname(person.getNickname())
+						.sex(person.getSex())
+						.birthday(person.getBirthday())
+						.description(person.getDescription())
+						.createTime(person.getCreate_time())
+						.build();
+					return BaseResp.success(resp);
+				})
+				.orElseThrow(() -> new RuntimeException("查無此人員資料"));
+		} catch (Exception e) {
+			log.error("getOnePerson 執行失敗, id: {}", id, e);
+			return BaseResp.error(SystemCode.SYSTEM_ERROR);
+		} finally {
+			log.info("getOnePerson 執行結束, id: {}", id);
+		}
 	}
 
 	/* 新增資料 */
-	public void addPerson(String name, String nickname, String sex, String birthday, String description) throws Exception{
-
-	    String date = sdf.format(new Date());
-		ps.println("addPerson開始 "+ date);
-
-		String sql = "INSERT INTO tb_person ("
-					+ "name, nickname, sex, birthday, description, create_time)"
-					+ "values(?, ?, ?, ?, ?, ?)";
-		Object[] params = new Object[] {name, nickname, sex, birthday, description, date};
-
+	@Transactional
+	public BaseResp<Void> createPerson(PersonCreateRequest req) {
+		log.info("createPerson 開始執行");
 		try {
-			ps.println(sql);
-			for (int i = 0; i < params.length; i++) {
-				ps.print(params[i]+", ");
+			// 驗證
+			if (req.getName() == null || req.getName().trim().isEmpty()) {
+				return BaseResp.error(SystemCode.SYSTEM_ERROR, "姓名不能為空");
 			}
-			jdbcTemplate.update(sql, params);
+			PersonModel person = PersonModel.builder()
+					.name(req.getName())
+					.nickname(req.getNickname())
+					.sex(req.getSex())
+					.birthday(req.getBirthday())
+					.description(req.getDescription())
+					.build();
+			personRepository.save(person);
 
-			personModel.setName(name);
-			personModel.setNickname(nickname);
-			personModel.setSex(sex);
-			personModel.setBirthday(birthday);
-			personModel.setDescription(description);
-			personModel.setCreate_time(date);
-
-			System.out.println("\n"+name+":"+nickname+":"+sex+":"+birthday+":"+description+":"+date);
-			System.out.println("addPerson結束 "+ date);
+			return BaseResp.success();
 		} catch (Exception e) {
-			e.printStackTrace();
-			ps.println(e.getMessage());
+			log.error("createPerson 執行錯誤", e);
+			return BaseResp.error(SystemCode.SYSTEM_ERROR);
+		} finally {
+			log.info("createPerson 執行結束");
 		}
-	}
-
-	/* 取得資料 並將資料新增至PersonModel */
-	public List<Map<String, Object>> selPerson() {
-		System.out.println("selPerson開始 " + sdf.format(new Date()));
-		System.out.println("取得ID "+personModel.getId()+" Person會員資料..");
-		Object[] params = new Object[]{personModel.getId()};
-
-		List<Map<String, Object>> rs=new ArrayList<Map<String, Object>>();
-		StringBuilder sql = new StringBuilder("SELECT id, name, nickname, sex, "
-											+ "birthday, description, date_format(create_time, '%Y-%m-%d %H:%m:%s') as create_time "
-											+ "FROM tb_person WHERE ID = ?");
-		if (params != null) {
-			ps.println(sql+":"+params[0].toString());
-		} else {
-			ps.println(sql+":"+params.toString());
-		}
-		
-		rs = jdbcTemplate.queryForList(sql.toString(), params);
-		for (Map<String, Object> i : rs) {
-			for (Map.Entry<String, Object> j : i.entrySet()) {
-				System.out.printf("rs Key->%s, Value->%S ", j.getKey(), j.getValue());
-
-				switch (j.getKey().toString()) {
-				case "id":
-					ps.println("1");
-					if (j.getValue()==null) {
-						break;
-					}
-					personModel.setId(j.getValue().toString());
-					break;
-				case "name":
-					ps.println("2");
-					if (j.getValue()==null) {
-						break;
-					}
-					personModel.setName(j.getValue().toString());
-					break;
-				case "nickname":
-					ps.println("3");
-					if (j.getValue()==null) {
-						break;
-					}
-					personModel.setNickname(j.getValue().toString());
-					break;
-				case "sex":
-					ps.println("4");
-					if (j.getValue()==null) {
-						break;
-					}
-					personModel.setSex(j.getValue().toString());
-					break;
-				case "birthday":
-					ps.println("5");
-					if (j.getValue()==null) {
-						break;
-					}
-					personModel.setBirthday(j.getValue().toString());
-					break;
-				case "description":
-					ps.println("6");
-					if (j.getValue()==null) {
-						break;
-					}
-					personModel.setDescription(j.getValue().toString());
-					break;
-				case "create_time":
-					ps.println("7");
-					if (j.getValue()==null) {
-						break;
-					}
-					personModel.setCreate_time(j.getValue().toString());
-					break;
-				default:
-					break;
-				}
-			}
-		}
-		System.out.println();
-		System.out.println(rs);
-		System.out.println("selPerson結束 " + sdf.format(new Date()));
-
-		return rs;
 	}
 
 	/* 修改資料 */
-	public void editPerson(String id, String name, String nickname, String sex, String birthday, String description) throws Exception{
-
-	    String date = sdf.format(new Date());
-		ps.println("editPerson開始 " + date);
-
-		String sql = "UPDATE tb_person SET "
-				+ "name = ?, nickname = ?, sex = ?, birthday = ?, description = ?, create_time = ? "
-				+ "WHERE id = " + id;
-		Object[] params = new Object[] {name, nickname, sex, birthday, description, date};
-		
+	@Transactional
+	public BaseResp<Void> editPerson(PersonUpdateRequest req) {
 		try {
-			jdbcTemplate.update(sql, params);
-			ps.println(sql+params);
-			selPerson();
-			ps.println("editPerson結束 " + date);
+			log.info("editPerson 開始執行, id: {}", req.getId());
+
+			// 寫法一
+			// 檢查是否存在
+			// PersonModel existingPerson = personRepository.findById(req.getId())
+			// 		.orElseThrow(() -> new RuntimeException("查無此資料"));
+			// PersonModel updatedPerson = PersonModel.builder()
+			// 		.id(req.getId())
+			// 		.name(req.getName())
+			// 		.nickname(req.getNickname())
+			// 		.sex(req.getSex())
+			// 		.birthday(req.getBirthday())
+			// 		.description(req.getDescription())
+			// 		.build();
+
+		    // personRepository.save(updatedPerson);
+			// return BaseResp.success();
+
+			// 寫法二
+			return personRepository.findById(req.getId())
+				.map(existingPerson -> {
+					// 只更新非空欄位
+					Optional.ofNullable(req.getName()).ifPresent(existingPerson::setName);
+					Optional.ofNullable(req.getNickname()).ifPresent(existingPerson::setNickname);
+					Optional.ofNullable(req.getSex()).ifPresent(existingPerson::setSex);
+					Optional.ofNullable(req.getBirthday()).ifPresent(existingPerson::setBirthday);
+					Optional.ofNullable(req.getDescription()).ifPresent(existingPerson::setDescription);
+
+					personRepository.save(existingPerson);
+					return BaseResp.success();
+				})
+				.orElseThrow(() -> new RuntimeException("查無此資料"));
+
 		} catch (Exception e) {
-			// TODO: handle exception
-			ps.println(e.getMessage());
-			e.printStackTrace();
+			log.error("修改人員資料失敗, id: {}", req.getId(), e);
+			return BaseResp.error(SystemCode.SYSTEM_ERROR);
+		} finally {
+			log.info("editPerson 執行結束");
 		}
 	}
 
 	/* 刪除資料 */
-	public void delPerson(String id) throws Exception {
+	@Transactional
+	public BaseResp<Void> deletePerson(Long id) {
+		log.info("deletePerson 開始執行, id: {}", id);
 		try {
-			log.info("delPerson start: {}", sdf.format(new Date()));
-			Long modelId = Long.parseLong(id);
-			personRepository.deleteById(modelId);
+			PersonModel person = personRepository.findById(id)
+					.orElseThrow(() -> new RuntimeException("查無此資料"));
+
+			personRepository.delete(person);
+
+			return BaseResp.success();
+
+			// 軟刪除寫法
+			// return personRepository.findById(id)
+			// 		.map(person -> {
+			// 			person.setDeleted(true);
+			// 			person.setDeleteTime(Instant.now());
+			// 			personRepository.save(person);
+			// 			return BaseResp.success();
+			// 		})
+			// 		.orElseThrow(() -> new RuntimeException("查無此人員資料"));
+
 		} catch (Exception e) {
 			log.error("刪除人員資料失敗, id: {}", id, e);
-			throw e;
+			return BaseResp.error(SystemCode.SYSTEM_ERROR);
 		} finally {
-			log.info("delPerson end: {}", sdf.format(new Date()));
+			log.info("deletePerson 執行結束, id: {}", id);
 		}
 	}
 
