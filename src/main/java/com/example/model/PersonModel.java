@@ -27,7 +27,8 @@ public class PersonModel {
 	private Long id;
 
 	@Column(name = "name",
-			columnDefinition = "名字")
+			columnDefinition = "名字",
+			nullable = false)
 	private String name;
 
 	@Column(name = "nickname",
@@ -35,8 +36,9 @@ public class PersonModel {
 	private String nickname;
 
 	@Column(name = "sex",
-			columnDefinition = "性別")
-	private String sex;
+			columnDefinition = "性別 COMMENT '1:男, 2:女'",
+			nullable = false)
+	private Integer sex;
 
 	@Column(name = "birthday",
 			columnDefinition = "生日")

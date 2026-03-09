@@ -19,8 +19,8 @@ public class PersonCreateRequest {
     @Size(max = 50, message = "暱稱長度不能超過50個字元")
     private String nickname;
 
-    @Size(max = 10, message = "性別長度不能超過10個字元")
-    private String sex;
+    @Size(max = 1, message = "性別代碼不能超過1個字元")
+    private Integer sex;
 
     @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$", message = "生日格式必須為 yyyy-MM-dd")
     private String birthday;

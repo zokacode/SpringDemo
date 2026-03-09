@@ -25,56 +25,58 @@ public class PersonService {
 	private final JdbcTemplate jdbcTemplate;
 	private final PersonRepository personRepository;
 
-	/* 取得Person全部資料 */
-	public BaseResp<List<PersonResponse>> getAllPerson() {
-		log.info("getAllPerson 開始執行");
-		try {
-			List<PersonModel> personList = personRepository.findAll();
-			List<PersonResponse> responseList = personList.stream()
-					.map(person -> PersonResponse.builder()
-						.id(person.getId())
-						.name(person.getName())
-						.nickname(person.getNickname())
-						.sex(person.getSex())
-						.birthday(person.getBirthday())
-						.description(person.getDescription())
-						.createTime(person.getCreated_at())
-						.build())
-					.toList();
-			return BaseResp.success(responseList);
-		} catch (Exception e) {
-			log.error("getAllPerson 執行失敗", e);
-			return BaseResp.error(SystemCode.SYSTEM_ERROR);
-		} finally {
-			log.info("getAllPerson 執行結束");
-		}
-	}
+    /* 取得Person全部資料 */
+    public BaseResp<List<PersonResponse>> getAllPerson() {
+        log.info("getAllPerson Start");
+        try {
+            List<PersonModel> personList = personRepository.findAll();
+            List<PersonResponse> responseList = personList.stream()
+                    .map(person -> PersonResponse.builder()
+                        .id(person.getId())
+                        .name(person.getName())
+                        .nickname(person.getNickname())
+                        .sex(person.getSex())
+                        .birthday(person.getBirthday())
+                        .description(person.getDescription())
+                        .createTime(person.getCreated_at())
+                        .updateTime(person.getUpdated_at())
+                        .build())
+                    .toList();
+            return BaseResp.success(responseList);
+        } catch (Exception e) {
+            log.error("getAllPerson Error:", e);
+            return BaseResp.error(SystemCode.SYSTEM_ERROR);
+        } finally {
+            log.info("getAllPerson End");
+        }
+    }
 
-	/* 取得單獨資料 */
-	public BaseResp<PersonResponse> getOnePerson(Long id) {
-		log.info("getOnePerson 開始執行, id: {}", id);
-		try {
-			return personRepository.findById(id)
-				.map(person -> {
-					PersonResponse resp = PersonResponse.builder()
-						.id(person.getId())
-						.name(person.getName())
-						.nickname(person.getNickname())
-						.sex(person.getSex())
-						.birthday(person.getBirthday())
-						.description(person.getDescription())
-						.createTime(person.getCreated_at())
-						.build();
-					return BaseResp.success(resp);
-				})
-				.orElseThrow(() -> new RuntimeException("查無此人員資料"));
-		} catch (Exception e) {
-			log.error("getOnePerson 執行失敗, id: {}", id, e);
-			return BaseResp.error(SystemCode.SYSTEM_ERROR);
-		} finally {
-			log.info("getOnePerson 執行結束, id: {}", id);
-		}
-	}
+    /* 取得單獨資料 */
+    public BaseResp<PersonResponse> getOnePerson(Long id) {
+        log.info("getOnePerson Start, id: {}", id);
+        try {
+            return personRepository.findById(id)
+                .map(person -> {
+                    PersonResponse resp = PersonResponse.builder()
+                        .id(person.getId())
+                        .name(person.getName())
+                        .nickname(person.getNickname())
+                        .sex(person.getSex())
+                        .birthday(person.getBirthday())
+                        .description(person.getDescription())
+                        .createTime(person.getCreated_at())
+                        .updateTime(person.getUpdated_at())
+                        .build();
+                    return BaseResp.success(resp);
+                })
+                .orElseThrow(() -> new RuntimeException("查無此人員資料"));
+        } catch (Exception e) {
+            log.error("getOnePerson Error, id: {}", id, e);
+            return BaseResp.error(SystemCode.SYSTEM_ERROR);
+        } finally {
+            log.info("getOnePerson End, id: {}", id);
+        }
+    }
 
 	/* 新增資料 */
 	@Transactional

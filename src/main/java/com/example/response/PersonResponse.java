@@ -15,11 +15,13 @@ public class PersonResponse {
     private Long id;
     private String name;
     private String nickname;
-    private String sex;
+    private Integer sex;
     private String birthday;
     private String description;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Instant createTime;
 
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private Instant updateTime;
 }
