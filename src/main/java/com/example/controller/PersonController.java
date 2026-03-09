@@ -30,7 +30,8 @@ public class PersonController {
 	}
 
 	@GetMapping("/{id}")
-	public BaseResp<PersonResponse> getOnePerson(@PathVariable Long id) {
+	public BaseResp<PersonResponse> getOnePerson(
+		  @PathVariable @NotBlank(message = "id不能為空") @Positive(message = "id必須為正數") Long id) {
 		return personService.getOnePerson(id);
 	}
 
@@ -41,14 +42,17 @@ public class PersonController {
 
 	@PutMapping("/edit-person/{id}")
 	/* 修改資料儲存Api */
-	public BaseResp<Void> editPerson(@PathVariable Long id, @Valid @RequestBody PersonUpdateRequest req) {
+	public BaseResp<Void> editPerson(
+			@PathVariable @NotBlank(message = "id不能為空") @Positive(message = "id必須為正數") Long id,
+			@Valid @RequestBody PersonUpdateRequest req) {
 		req.setId(id);
 		return personService.editPerson(req);
 	}
 
 	@DeleteMapping("/delete-person/{id}")
 	/* 刪除資料Api */
-	public BaseResp<Void> delPerson(@PathVariable Long id) {
+	public BaseResp<Void> delPerson(
+			@PathVariable @NotBlank(message = "id不能為空") @Positive(message = "id必須為正數") Long id) {
 		return personService.deletePerson(id);
 	}
 
