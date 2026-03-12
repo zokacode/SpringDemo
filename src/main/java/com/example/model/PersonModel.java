@@ -13,9 +13,9 @@ import org.springframework.stereotype.Component;
 
 import java.time.Instant;
 
-@Data
 @Entity
 @Table(name = "tb_person")
+@Data
 @EntityListeners(AuditingEntityListener.class)
 @NoArgsConstructor
 @AllArgsConstructor
