@@ -3,27 +3,18 @@ package com.example.config;
 import com.example.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.CacheManager;
-import org.springframework.cache.concurrent.ConcurrentMapCache;
-import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.core.userdetails.UserCache;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.cache.SpringCacheBasedUserCache;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-
-import java.util.concurrent.TimeUnit;
 
 @Configuration
 @EnableWebSecurity
@@ -33,7 +24,6 @@ public class SecurityConfig {
 
     // 注入自定義的 JWT 過濾器
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
-    private final UserDetailsService userDetailsService;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -59,87 +49,6 @@ public class SecurityConfig {
         return http.build();
     }
 
-    @Bean
-    public DaoAuthenticationProvider authenticationProvider(PasswordEncoder passwordEncoder, UserCache userCache) {
-        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-        authProvider.setUserDetailsService(userDetailsService);
-        authProvider.setPasswordEncoder(passwordEncoder);
-        authProvider.setUserCache(userCache);
-        return authProvider;
-    }
-
-    @Bean
-    public CacheManager cacheManager() {
-        ConcurrentMapCacheManager cacheManager = new ConcurrentMapCacheManager() {
-            @Override
-            protected ConcurrentMapCache createConcurrentMapCache(String name) {
-                // 為用戶快取設定 30 分鐘過期時間
-                if ("userCache".equals(name)) {
-                    return new ConcurrentMapCache(name, 1000, false) {
-                        private final java.util.concurrent.ConcurrentMap<Object, Object> store = new java.util.concurrent.ConcurrentHashMap<>();
-                        
-                        @Override
-                        public Object get(Object key) {
-                            Object value = store.get(key);
-                            if (value instanceof CacheEntry) {
-                                CacheEntry entry = (CacheEntry) value;
-                                if (System.currentTimeMillis() > entry.expiryTime) {
-                                    store.remove(key);
-                                    return null;
-                                }
-                                return entry.value;
-                            }
-                            return value;
-                        }
-                        
-                        @Override
-                        public void put(Object key, Object value) {
-                            if (value != null) {
-                                long expiryTime = System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(30);
-                                store.put(key, new CacheEntry(value, expiryTime));
-                            }
-                        }
-                        
-                        @Override
-                        public void evict(Object key) {
-                            store.remove(key);
-                        }
-                        
-                        @Override
-                        public void clear() {
-                            store.clear();
-                        }
-                        
-                        private static class CacheEntry {
-                            final Object value;
-                            final long expiryTime;
-                            
-                            CacheEntry(Object value, long expiryTime) {
-                                this.value = value;
-                                this.expiryTime = expiryTime;
-                            }
-                        }
-                    };
-                }
-                return super.createConcurrentMapCache(name);
-            }
-        };
-        
-        cacheManager.setAllowNullValues(false);
-        return cacheManager;
-    }
-
-    @Bean
-    public UserCache userCache(CacheManager cacheManager) {
-        SpringCacheBasedUserCache userCache = new SpringCacheBasedUserCache(cacheManager.getCache("userCache"));
-        log.info("User cache initialized with cache manager: {}", cacheManager.getClass().getSimpleName());
-        return userCache;
-    }
-
-    /**
-     * 定義密碼加密工具
-     * 使用 BCrypt 強雜湊演算法
-     */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
